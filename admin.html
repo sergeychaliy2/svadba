@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ответы гостей — Сергей и Ксения</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FDF7F4;--blush:#F0D3DB;--blush-deep:#E2B3C2;--lilac:#DCD0EC;
+  --wine:#6E2338;--wine-soft:#8E3B52;--ink:#4B3742;--ink-soft:#836F7A;
+  --line:rgba(110,35,56,.14);--shadow:0 18px 46px -32px rgba(110,35,56,.45);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost','Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;padding:32px 18px 80px;font-family:var(--sans);font-weight:300;
+  color:var(--ink);background:var(--cream);font-size:15px;line-height:1.6;
+  background-image:
+    radial-gradient(900px 520px at 8% -8%, rgba(240,211,219,.6), transparent 60%),
+    radial-gradient(800px 520px at 96% 2%, rgba(220,208,236,.55), transparent 58%);
+  background-attachment:fixed;
+}
+.page{max-width:1000px;margin:0 auto}
+h1{font-family:var(--serif);font-weight:400;font-size:38px;color:var(--wine);margin:0 0 4px;text-align:center}
+.sub{text-align:center;color:var(--ink-soft);font-size:13.5px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 30px}
+
+.card{background:#fffdfd;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
+
+/* ------- вход ------- */
+.login{max-width:420px;margin:60px auto}
+.login label{display:block;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px}
+input[type=password],input[type=search]{
+  width:100%;font-family:var(--sans);font-size:16px;font-weight:300;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px 15px;
+}
+input:focus{outline:none;border-color:var(--blush-deep);box-shadow:0 0 0 3px rgba(226,179,194,.26)}
+
+button{
+  font-family:var(--sans);font-size:12px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;
+  padding:12px 18px;border-radius:13px;cursor:pointer;transition:.2s;
+  color:#fff;background:var(--wine);border:1px solid var(--wine);
+}
+button:hover:not(:disabled){background:var(--wine-soft);border-color:var(--wine-soft)}
+button:disabled{opacity:.5;cursor:progress}
+button.ghost{color:var(--wine-soft);background:transparent;border-color:var(--line)}
+button.ghost:hover{background:rgba(240,211,219,.3);color:var(--wine)}
+button.ghost.on{background:var(--blush);border-color:var(--blush-deep);color:var(--wine)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row .grow{flex:1 1 200px}
+
+/* ------- сводка ------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.tile{background:#fffdfd;border:1px solid var(--line);border-radius:18px;padding:18px 16px;text-align:center;box-shadow:var(--shadow)}
+.tile b{display:block;font-family:var(--serif);font-size:40px;font-weight:500;color:var(--wine);line-height:1}
+.tile span{display:block;margin-top:6px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
+
+h2{font-family:var(--serif);font-weight:400;font-size:25px;color:var(--wine);margin:0 0 16px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px}
+
+.bar{margin-bottom:14px}
+.bar:last-child{margin-bottom:0}
+.bar__top{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:6px}
+.bar__name{font-size:14.5px}
+.bar__val{font-family:var(--serif);font-size:21px;color:var(--wine);white-space:nowrap}
+.bar__track{height:9px;border-radius:99px;background:rgba(110,35,56,.08);overflow:hidden}
+.bar__fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blush-deep),var(--lilac));transition:width .5s ease}
+
+/* ------- таблица ------- */
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
+th{
+  text-align:left;font-weight:400;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-soft);padding:0 12px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+td{padding:12px;border-bottom:1px solid rgba(110,35,56,.07);vertical-align:top}
+tr.stale{opacity:.42}
+tr.no td{color:var(--ink-soft)}
+.name{font-size:15px;color:var(--wine);white-space:nowrap}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11.5px;letter-spacing:.04em;white-space:nowrap}
+.tag.yes{background:rgba(191,170,224,.34);color:#4d3a6b}
+.tag.no{background:rgba(110,35,56,.09);color:var(--ink-soft)}
+.dim{color:var(--ink-soft);font-size:13px}
+.empty{text-align:center;color:var(--ink-soft);padding:34px 10px}
+.msg{margin-top:12px;font-size:13.5px;color:#b03a54}
+.msg:empty{display:none}
+
+pre.list{
+  white-space:pre-wrap;font-family:var(--sans);font-size:14px;line-height:1.75;
+  background:rgba(240,211,219,.2);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0;
+}
+.hidden{display:none}
+
+@media print{
+  body{background:#fff;padding:0}
+  .noprint{display:none!important}
+  .card{box-shadow:none;border-color:#ddd;break-inside:avoid}
+  table{min-width:0;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Кто придёт и что будет есть</h1>
+  <p class="sub">Сергей и Ксения &middot; 12 декабря 2026</p>
+
+  <!-- ============================ ВХОД ============================ -->
+  <div class="card login" id="login">
+    <label for="token">Пароль администратора</label>
+    <input type="password" id="token" autocomplete="current-password" placeholder="тот же, что в Code.gs">
+    <div class="row" style="margin-top:14px">
+      <button id="loginBtn" style="width:100%">Показать ответы</button>
+    </div>
+    <p class="msg" id="loginMsg"></p>
+  </div>
+
+  <!-- =========================== ПАНЕЛЬ =========================== -->
+  <div id="dash" class="hidden">
+
+    <div class="row noprint" style="margin-bottom:18px">
+      <input type="search" id="search" class="grow" placeholder="Поиск по имени…">
+      <button class="ghost" id="reload">Обновить</button>
+      <button class="ghost" id="toggleStale">Показать перезаписанные</button>
+      <button class="ghost" id="csv">Скачать CSV</button>
+      <button class="ghost" id="print">Печать</button>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="two">
+      <div class="card">
+        <h2>Горячее блюдо</h2>
+        <div id="hotBars"></div>
+      </div>
+      <div class="card">
+        <h2>Салаты</h2>
+        <div id="saladBars"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Список гостей</h2>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:34px">№</th>
+              <th>Имя и фамилия</th>
+              <th>Статус</th>
+              <th>Горячее</th>
+              <th>Салат</th>
+              <th>Комментарий</th>
+              <th>Ответ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Заявка для ресторана</h2>
+      <p class="dim noprint" style="margin-top:-8px">Готовый текст — можно скопировать и отправить менеджеру.</p>
+      <pre class="list" id="kitchen"></pre>
+      <div class="row noprint" style="margin-top:14px">
+        <button class="ghost" id="copyKitchen">Скопировать текст</button>
+      </div>
+    </div>
+
+    <p class="dim noprint" style="text-align:center">
+      Все ответы также лежат в вашей Google-таблице — на листе «Ответы».
+    </p>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var CFG = window.WEDDING_CONFIG || {};
+  var $  = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+
+  var STORE = 'wedding_admin_token';
+  var rows = [];
+  var showStale = false;
+  var token = '';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ключ для склейки повторных ответов одного человека */
+  function key(name) {
+    return String(name).toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim();
+  }
+
+  function jsonp(url, params) {
+    return new Promise(function (resolve, reject) {
+      var cb = 'acb' + Date.now() + Math.floor(Math.random() * 1000);
+      var s = document.createElement('script');
+      var done = false;
+      var timer = setTimeout(function () { finish(); reject(new Error('превышено время ожидания')); }, 25000);
+      function finish() {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        if (s.parentNode) s.parentNode.removeChild(s);
+      }
+      window[cb] = function (d) { finish(); resolve(d); };
+      s.onerror = function () { finish(); reject(new Error('нет связи с сервером')); };
+      var q = ['callback=' + cb];
+      Object.keys(params).forEach(function (k) { q.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k])); });
+      s.src = url + (url.indexOf('?') > -1 ? '&' : '?') + q.join('&');
+      document.head.appendChild(s);
+    });
+  }
+
+  /* ------------------------------ ЗАГРУЗКА ------------------------------ */
+  function load(tok) {
+    var btn = $('#loginBtn');
+    btn.disabled = true;
+    $('#loginMsg').textContent = '';
+
+    if (!CFG.API_URL) {
+      btn.disabled = false;
+      $('#loginMsg').textContent = 'В config.js не заполнен API_URL. См. README.md, шаг 2.';
+      return;
+    }
+
+    jsonp(CFG.API_URL, { action: 'list', token: tok })
+      .then(function (res) {
+        btn.disabled = false;
+        if (!res || !res.ok) throw new Error((res && res.error) || 'сервер не ответил');
+        token = tok;
+        try { localStorage.setItem(STORE, tok); } catch (e) {}
+        rows = res.rows || [];
+        markStale();
+        $('#login').classList.add('hidden');
+        $('#dash').classList.remove('hidden');
+        render();
+      })
+      .catch(function (err) {
+        btn.disabled = false;
+        $('#loginMsg').textContent = 'Не удалось загрузить: ' + err.message;
+      });
+  }
+
+  /* последний ответ каждого гостя — актуальный, предыдущие помечаем */
+  function markStale() {
+    var latest = {};
+    rows.forEach(function (r, i) { latest[key(r.name)] = i; });
+    rows.forEach(function (r, i) { r.stale = latest[key(r.name)] !== i; });
+  }
+
+  function actual() { return rows.filter(function (r) { return !r.stale; }); }
+
+  /* ------------------------------- ВЫВОД -------------------------------- */
+  function render() {
+    var live   = actual();
+    var coming = live.filter(function (r) { return r.coming; });
+    var no     = live.filter(function (r) { return !r.coming; });
+
+    $('#tiles').innerHTML =
+      tile(live.length, 'Ответили человек') +
+      tile(coming.length, 'Придут') +
+      tile(no.length, 'Не смогут') +
+      tile(new Set(live.map(function (r) { return r.formId; })).size, 'Анкет заполнено');
+
+    $('#hotBars').innerHTML   = bars(coming, 'hot')   || '<p class="dim">Пока нет данных</p>';
+    $('#saladBars').innerHTML = bars(coming, 'salad') || '<p class="dim">Пока нет данных</p>';
+
+    table();
+    kitchen(coming);
+  }
+
+  function tile(n, label) {
+    return '<div class="tile"><b>' + n + '</b><span>' + label + '</span></div>';
+  }
+
+  function bars(list, field) {
+    var counts = {};
+    list.forEach(function (r) {
+      var v = (r[field] || '').trim();
+      if (!v) v = 'не выбрано';
+      counts[v] = (counts[v] || 0) + 1;
+    });
+    var names = Object.keys(counts);
+    if (!names.length) return '';
+    var max = Math.max.apply(null, names.map(function (n) { return counts[n]; }));
+
+    return names.sort(function (a, b) { return counts[b] - counts[a]; }).map(function (n) {
+      var pct = max ? Math.round(counts[n] / max * 100) : 0;
+      return '<div class="bar">' +
+        '<div class="bar__top"><span class="bar__name">' + esc(n) + '</span>' +
+        '<span class="bar__val">' + counts[n] + '</span></div>' +
+        '<div class="bar__track"><div class="bar__fill" style="width:' + pct + '%"></div></div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function visibleRows() {
+    var q = key($('#search').value || '');
+    return rows.filter(function (r) {
+      if (r.stale && !showStale) return false;
+      return !q || key(r.name).indexOf(q) > -1;
+    });
+  }
+
+  function table() {
+    var list = visibleRows();
+    if (!list.length) {
+      $('#tbody').innerHTML = '<tr><td colspan="7" class="empty">Пока ни одного ответа</td></tr>';
+      return;
+    }
+    $('#tbody').innerHTML = list.map(function (r, i) {
+      var when = '';
+      try {
+        when = new Date(r.at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      } catch (e) { when = esc(r.at); }
+      return '<tr class="' + (r.stale ? 'stale ' : '') + (r.coming ? '' : 'no') + '">' +
+        '<td class="dim">' + (i + 1) + '</td>' +
+        '<td class="name">' + esc(r.name) + (r.stale ? ' <span class="dim">(перезаписан)</span>' : '') + '</td>' +
+        '<td><span class="tag ' + (r.coming ? 'yes' : 'no') + '">' + (r.coming ? 'придёт' : 'не сможет') + '</span></td>' +
+        '<td>' + esc(r.hot) + '</td>' +
+        '<td>' + esc(r.salad) + '</td>' +
+        '<td class="dim">' + esc(r.comment) + '</td>' +
+        '<td class="dim">' + esc(when) + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function kitchen(coming) {
+    if (!coming.length) { $('#kitchen').textContent = 'Пока никто не подтвердил участие.'; return; }
+
+    var byHot = {}, bySalad = {};
+    coming.forEach(function (r) {
+      var h = r.hot || 'не выбрано', s = r.salad || 'не выбрано';
+      (byHot[h] = byHot[h] || []).push(r.name);
+      (bySalad[s] = bySalad[s] || []).push(r.name);
+    });
+
+    var out = 'Свадьба Сергея и Ксении, 12 декабря 2026\n';
+    out += 'Гостей подтвердило: ' + coming.length + '\n\n';
+    out += 'ГОРЯЧЕЕ\n';
+    Object.keys(byHot).forEach(function (k) { out += '  ' + k + ' — ' + byHot[k].length + '\n'; });
+    out += '\nСАЛАТЫ\n';
+    Object.keys(bySalad).forEach(function (k) { out += '  ' + k + ' — ' + bySalad[k].length + '\n'; });
+
+    var notes = actual().filter(function (r) { return r.comment; });
+    if (notes.length) {
+      out += '\nПОЖЕЛАНИЯ И ОСОБЕННОСТИ\n';
+      notes.forEach(function (r) { out += '  ' + r.name + ': ' + r.comment + '\n'; });
+    }
+
+    out += '\nПОИМЁННО\n';
+    coming.forEach(function (r, i) {
+      out += '  ' + (i + 1) + '. ' + r.name + ' — ' + (r.hot || '?') + ' / ' + (r.salad || '?') + '\n';
+    });
+
+    $('#kitchen').textContent = out;
+  }
+
+  /* -------------------------------- CSV --------------------------------- */
+  function csvCell(v) {
+    var s = String(v == null ? '' : v);
+    return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function downloadCsv() {
+    var head = ['Имя и фамилия', 'Придёт', 'Горячее блюдо', 'Салат', 'Комментарий', 'Дата ответа', 'Актуальность'];
+    var lines = [head.join(';')];
+    (showStale ? rows : actual()).forEach(function (r) {
+      lines.push([r.name, r.coming ? 'да' : 'нет', r.hot, r.salad, r.comment, r.at, r.stale ? 'перезаписан' : 'актуален']
+        .map(csvCell).join(';'));
+    });
+    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'gosti-12-12-2026.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  /* ------------------------------ СОБЫТИЯ ------------------------------- */
+  $('#loginBtn').addEventListener('click', function () { load($('#token').value.trim()); });
+  $('#token').addEventListener('keydown', function (e) { if (e.key === 'Enter') load($('#token').value.trim()); });
+  $('#search').addEventListener('input', table);
+  $('#reload').addEventListener('click', function () { load(token); });
+  $('#csv').addEventListener('click', downloadCsv);
+  $('#print').addEventListener('click', function () { window.print(); });
+
+  $('#toggleStale').addEventListener('click', function () {
+    showStale = !showStale;
+    this.classList.toggle('on', showStale);
+    this.textContent = showStale ? 'Скрыть перезаписанные' : 'Показать перезаписанные';
+    table();
+  });
+
+  $('#copyKitchen').addEventListener('click', function () {
+    var btn = this, text = $('#kitchen').textContent;
+    var done = function () { btn.textContent = 'Скопировано'; setTimeout(function () { btn.textContent = 'Скопировать текст'; }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      ta.remove();
+    }
+  });
+
+  /* --------------------------- АВТО-ВХОД -------------------------------- */
+  var params = new URLSearchParams(location.search);
+  var saved = '';
+  try { saved = localStorage.getItem(STORE) || ''; } catch (e) {}
+  /* пароль намеренно НЕ берётся из config.js — этот файл виден всем в интернете */
+  var auto = params.get('token') || saved || '';
+  if (auto) { $('#token').value = auto; load(auto); } else { $('#token').focus(); }
+}());
+</script>
+</body>
+</html>
