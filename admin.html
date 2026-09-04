@@ -35,11 +35,12 @@ h1{font-family:var(--serif);font-weight:400;font-size:38px;color:var(--wine);mar
 /* ------- вход ------- */
 .login{max-width:420px;margin:60px auto}
 .login label{display:block;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px}
-input[type=password],input[type=search]{
+input[type=password],input[type=search],input[type=text],select,textarea{
   width:100%;font-family:var(--sans);font-size:16px;font-weight:300;color:var(--ink);
   background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px 15px;
 }
-input:focus{outline:none;border-color:var(--blush-deep);box-shadow:0 0 0 3px rgba(226,179,194,.26)}
+textarea{min-height:78px;resize:vertical;line-height:1.6}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blush-deep);box-shadow:0 0 0 3px rgba(226,179,194,.26)}
 
 button{
   font-family:var(--sans);font-size:12px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;
@@ -49,8 +50,11 @@ button{
 button:hover:not(:disabled){background:var(--wine-soft);border-color:var(--wine-soft)}
 button:disabled{opacity:.5;cursor:progress}
 button.ghost{color:var(--wine-soft);background:transparent;border-color:var(--line)}
-button.ghost:hover{background:rgba(240,211,219,.3);color:var(--wine)}
+button.ghost:hover:not(:disabled){background:rgba(240,211,219,.3);color:var(--wine)}
 button.ghost.on{background:var(--blush);border-color:var(--blush-deep);color:var(--wine)}
+button.danger{color:#b03a54;background:transparent;border-color:rgba(176,58,84,.35)}
+button.danger:hover:not(:disabled){background:rgba(176,58,84,.08);color:#8f2b42}
+button.mini{padding:7px 12px;font-size:10.5px;letter-spacing:.1em;border-radius:10px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .row .grow{flex:1 1 200px}
 
@@ -73,13 +77,15 @@ h2{font-family:var(--serif);font-weight:400;font-size:25px;color:var(--wine);mar
 
 /* ------- таблица ------- */
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
 th{
   text-align:left;font-weight:400;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--ink-soft);padding:0 12px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
 }
 td{padding:12px;border-bottom:1px solid rgba(110,35,56,.07);vertical-align:top}
 tr.stale{opacity:.42}
+tr.gone{opacity:.4}
+tr.gone .name{text-decoration:line-through}
 tr.no td{color:var(--ink-soft)}
 .name{font-size:15px;color:var(--wine);white-space:nowrap}
 .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11.5px;letter-spacing:.04em;white-space:nowrap}
@@ -89,18 +95,35 @@ tr.no td{color:var(--ink-soft)}
 .empty{text-align:center;color:var(--ink-soft);padding:34px 10px}
 .msg{margin-top:12px;font-size:13.5px;color:#b03a54}
 .msg:empty{display:none}
+.note{font-size:13px;color:var(--ink-soft);margin:-6px 0 14px}
 
 pre.list{
   white-space:pre-wrap;font-family:var(--sans);font-size:14px;line-height:1.75;
   background:rgba(240,211,219,.2);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0;
 }
-.hidden{display:none}
+.hidden{display:none!important}   /* !important — иначе .overlay{display:flex} ниже перебьёт */
+
+/* ------- окно правки ------- */
+.overlay{
+  position:fixed;inset:0;z-index:60;background:rgba(74,42,56,.42);
+  display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
+}
+.modal{
+  background:#fffdfd;border-radius:22px;box-shadow:0 30px 70px -30px rgba(110,35,56,.6);
+  width:100%;max-width:520px;padding:26px 24px;margin:auto;
+}
+.modal h2{margin-bottom:6px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px}
+.modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.modal .actions .spacer{flex:1 1 auto}
 
 @media print{
   body{background:#fff;padding:0}
   .noprint{display:none!important}
   .card{box-shadow:none;border-color:#ddd;break-inside:avoid}
   table{min-width:0;font-size:12px}
+  th:last-child,td:last-child{display:none}
 }
 </style>
 </head>
@@ -126,7 +149,7 @@ pre.list{
     <div class="row noprint" style="margin-bottom:18px">
       <input type="search" id="search" class="grow" placeholder="Поиск по имени…">
       <button class="ghost" id="reload">Обновить</button>
-      <button class="ghost" id="toggleStale">Показать перезаписанные</button>
+      <button class="ghost" id="toggleHidden">Показать скрытых</button>
       <button class="ghost" id="csv">Скачать CSV</button>
       <button class="ghost" id="print">Печать</button>
     </div>
@@ -146,6 +169,8 @@ pre.list{
 
     <div class="card">
       <h2>Список гостей</h2>
+      <p class="note noprint">Нажмите «Изменить», чтобы поправить блюдо, имя или убрать гостя.
+        Убранные не удаляются из таблицы — их всегда можно вернуть.</p>
       <div class="tablewrap">
         <table>
           <thead>
@@ -157,11 +182,13 @@ pre.list{
               <th>Салат</th>
               <th>Комментарий</th>
               <th>Ответ</th>
+              <th class="noprint"></th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
+      <p class="msg" id="tableMsg"></p>
     </div>
 
     <div class="card">
@@ -180,6 +207,48 @@ pre.list{
 
 </div>
 
+<!-- ========================= ОКНО ПРАВКИ ========================= -->
+<div class="overlay hidden" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <h2 id="edTitle">Изменить гостя</h2>
+    <p class="dim" id="edSub"></p>
+
+    <div class="field">
+      <label for="edName">Имя и фамилия</label>
+      <input type="text" id="edName" maxlength="80">
+    </div>
+
+    <div class="field">
+      <label for="edComing">Придёт</label>
+      <select id="edComing">
+        <option value="да">да</option>
+        <option value="нет">нет</option>
+      </select>
+    </div>
+
+    <div class="field" id="edDishes">
+      <label for="edMain">Горячее блюдо</label>
+      <select id="edMain"></select>
+      <label for="edSalad" style="margin-top:14px">Салат</label>
+      <select id="edSalad"></select>
+    </div>
+
+    <div class="field">
+      <label for="edComment">Комментарий</label>
+      <textarea id="edComment" maxlength="500"></textarea>
+    </div>
+
+    <p class="msg" id="edMsg"></p>
+
+    <div class="actions">
+      <button id="edSave">Сохранить</button>
+      <button class="ghost" id="edCancel">Отмена</button>
+      <span class="spacer"></span>
+      <button class="danger" id="edRemove">Убрать гостя</button>
+    </div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script>
 (function () {
@@ -191,8 +260,10 @@ pre.list{
 
   var STORE = 'wedding_admin_token';
   var rows = [];
-  var showStale = false;
+  var menu = { mains: [], salads: [] };
+  var showHidden = false;
   var token = '';
+  var editing = null;
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -205,12 +276,15 @@ pre.list{
     return String(name).toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim();
   }
 
-  function jsonp(url, params) {
+  function jsonp(params) {
     return new Promise(function (resolve, reject) {
+      var url = CFG.API_URL;
+      if (!url) { reject(new Error('в config.js не заполнен API_URL')); return; }
+
       var cb = 'acb' + Date.now() + Math.floor(Math.random() * 1000);
       var s = document.createElement('script');
       var done = false;
-      var timer = setTimeout(function () { finish(); reject(new Error('превышено время ожидания')); }, 25000);
+      var timer = setTimeout(function () { finish(); reject(new Error('превышено время ожидания')); }, 30000);
       function finish() {
         if (done) return;
         done = true;
@@ -220,6 +294,7 @@ pre.list{
       }
       window[cb] = function (d) { finish(); resolve(d); };
       s.onerror = function () { finish(); reject(new Error('нет связи с сервером')); };
+
       var q = ['callback=' + cb];
       Object.keys(params).forEach(function (k) { q.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k])); });
       s.src = url + (url.indexOf('?') > -1 ? '&' : '?') + q.join('&');
@@ -232,20 +307,16 @@ pre.list{
     var btn = $('#loginBtn');
     btn.disabled = true;
     $('#loginMsg').textContent = '';
+    $('#tableMsg').textContent = '';
 
-    if (!CFG.API_URL) {
-      btn.disabled = false;
-      $('#loginMsg').textContent = 'В config.js не заполнен API_URL. См. README.md, шаг 2.';
-      return;
-    }
-
-    jsonp(CFG.API_URL, { action: 'list', token: tok })
+    jsonp({ action: 'list', token: tok })
       .then(function (res) {
         btn.disabled = false;
         if (!res || !res.ok) throw new Error((res && res.error) || 'сервер не ответил');
         token = tok;
         try { localStorage.setItem(STORE, tok); } catch (e) {}
         rows = res.rows || [];
+        if (res.menu) menu = res.menu;
         markStale();
         $('#login').classList.add('hidden');
         $('#dash').classList.remove('hidden');
@@ -257,14 +328,15 @@ pre.list{
       });
   }
 
-  /* последний ответ каждого гостя — актуальный, предыдущие помечаем */
+  /* последний ответ каждого гостя — актуальный, предыдущие помечаем.
+     убранные в этом сравнении не участвуют                              */
   function markStale() {
     var latest = {};
-    rows.forEach(function (r, i) { latest[key(r.name)] = i; });
-    rows.forEach(function (r, i) { r.stale = latest[key(r.name)] !== i; });
+    rows.forEach(function (r, i) { if (!r.removed) latest[key(r.name)] = i; });
+    rows.forEach(function (r, i) { r.stale = !r.removed && latest[key(r.name)] !== i; });
   }
 
-  function actual() { return rows.filter(function (r) { return !r.stale; }); }
+  function actual() { return rows.filter(function (r) { return !r.stale && !r.removed; }); }
 
   /* ------------------------------- ВЫВОД -------------------------------- */
   function render() {
@@ -272,14 +344,22 @@ pre.list{
     var coming = live.filter(function (r) { return r.coming; });
     var no     = live.filter(function (r) { return !r.coming; });
 
+    var forms = {};
+    live.forEach(function (r) { forms[r.formId] = 1; });
+
     $('#tiles').innerHTML =
       tile(live.length, 'Ответили человек') +
       tile(coming.length, 'Придут') +
       tile(no.length, 'Не смогут') +
-      tile(new Set(live.map(function (r) { return r.formId; })).size, 'Анкет заполнено');
+      tile(Object.keys(forms).length, 'Анкет заполнено');
 
     $('#hotBars').innerHTML   = bars(coming, 'hot')   || '<p class="dim">Пока нет данных</p>';
     $('#saladBars').innerHTML = bars(coming, 'salad') || '<p class="dim">Пока нет данных</p>';
+
+    var oldBackend = rows.length && rows.some(function (r) { return typeof r.row !== 'number'; });
+    $('#tableMsg').textContent = oldBackend
+      ? 'Кнопки «Изменить» появятся после того, как вы вставите новый Code.gs в Apps Script и переразвернёте скрипт (README, раздел «Правка ответов»).'
+      : '';
 
     table();
     kitchen(coming);
@@ -313,7 +393,7 @@ pre.list{
   function visibleRows() {
     var q = key($('#search').value || '');
     return rows.filter(function (r) {
-      if (r.stale && !showStale) return false;
+      if ((r.stale || r.removed) && !showHidden) return false;
       return !q || key(r.name).indexOf(q) > -1;
     });
   }
@@ -321,22 +401,33 @@ pre.list{
   function table() {
     var list = visibleRows();
     if (!list.length) {
-      $('#tbody').innerHTML = '<tr><td colspan="7" class="empty">Пока ни одного ответа</td></tr>';
+      $('#tbody').innerHTML = '<tr><td colspan="8" class="empty">Пока ни одного ответа</td></tr>';
       return;
     }
     $('#tbody').innerHTML = list.map(function (r, i) {
       var when = '';
       try {
         when = new Date(r.at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-      } catch (e) { when = esc(r.at); }
-      return '<tr class="' + (r.stale ? 'stale ' : '') + (r.coming ? '' : 'no') + '">' +
+      } catch (e) { when = r.at; }
+
+      var mark = r.removed ? ' <span class="dim">(убран)</span>'
+               : r.stale   ? ' <span class="dim">(перезаписан)</span>' : '';
+
+      // если Code.gs ещё старой версии, номера строк не приходят — кнопки прячем
+      var action = typeof r.row !== 'number' ? ''
+        : r.removed
+          ? '<button class="ghost mini" data-restore="' + r.row + '">Вернуть</button>'
+          : '<button class="ghost mini" data-edit="' + r.row + '">Изменить</button>';
+
+      return '<tr class="' + (r.removed ? 'gone ' : (r.stale ? 'stale ' : '')) + (r.coming ? '' : 'no') + '">' +
         '<td class="dim">' + (i + 1) + '</td>' +
-        '<td class="name">' + esc(r.name) + (r.stale ? ' <span class="dim">(перезаписан)</span>' : '') + '</td>' +
+        '<td class="name">' + esc(r.name) + mark + '</td>' +
         '<td><span class="tag ' + (r.coming ? 'yes' : 'no') + '">' + (r.coming ? 'придёт' : 'не сможет') + '</span></td>' +
         '<td>' + esc(r.hot) + '</td>' +
         '<td>' + esc(r.salad) + '</td>' +
         '<td class="dim">' + esc(r.comment) + '</td>' +
         '<td class="dim">' + esc(when) + '</td>' +
+        '<td class="noprint">' + action + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -372,17 +463,146 @@ pre.list{
     $('#kitchen').textContent = out;
   }
 
+  /* ---------------------------- ОКНО ПРАВКИ ----------------------------- */
+  function options(list, chosen) {
+    var html = '<option value="">— не выбрано —</option>';
+    list.forEach(function (v) {
+      html += '<option value="' + esc(v) + '"' + (v === chosen ? ' selected' : '') + '>' + esc(v) + '</option>';
+    });
+    return html;
+  }
+
+  function openEditor(rowNum) {
+    var r = rows.filter(function (x) { return x.row === rowNum; })[0];
+    if (!r) return;
+    editing = r;
+
+    $('#edSub').textContent = 'Строка ' + r.row + ' в таблице';
+    $('#edName').value = r.name;
+    $('#edComing').value = r.coming ? 'да' : 'нет';
+    $('#edMain').innerHTML = options(menu.mains || [], r.hot);
+    $('#edSalad').innerHTML = options(menu.salads || [], r.salad);
+    $('#edComment').value = r.comment;
+    $('#edMsg').textContent = '';
+    syncDishes();
+
+    $('#overlay').classList.remove('hidden');
+    $('#edName').focus();
+  }
+
+  function closeEditor() {
+    $('#overlay').classList.add('hidden');
+    editing = null;
+  }
+
+  function syncDishes() {
+    $('#edDishes').style.display = $('#edComing').value === 'да' ? '' : 'none';
+  }
+
+  function busy(on) {
+    ['#edSave', '#edCancel', '#edRemove'].forEach(function (s) { $(s).disabled = on; });
+  }
+
+  function save() {
+    if (!editing) return;
+    var name = $('#edName').value.trim();
+    if (name.length < 2) { $('#edMsg').textContent = 'Впишите имя и фамилию'; return; }
+
+    busy(true);
+    $('#edMsg').textContent = '';
+    jsonp({
+      action: 'update', token: token,
+      row: editing.row, was: editing.name,
+      name: name,
+      coming: $('#edComing').value,
+      main: $('#edMain').value,
+      salad: $('#edSalad').value,
+      comment: $('#edComment').value.trim()
+    }).then(function (res) {
+      busy(false);
+      if (!res || !res.ok) throw new Error((res && res.error) || 'не сохранилось');
+      closeEditor();
+      load(token);
+    }).catch(function (err) {
+      busy(false);
+      $('#edMsg').textContent = 'Не удалось сохранить: ' + err.message;
+    });
+  }
+
+  function setRemoved(rowNum, wasName, restore, onErr) {
+    return jsonp({
+      action: 'remove', token: token,
+      row: rowNum, was: wasName, restore: restore ? '1' : '0'
+    }).then(function (res) {
+      if (!res || !res.ok) throw new Error((res && res.error) || 'не получилось');
+      load(token);
+    }).catch(function (err) {
+      onErr('Не удалось: ' + err.message);
+    });
+  }
+
+  /* ------------------------------ СОБЫТИЯ ------------------------------- */
+  $('#loginBtn').addEventListener('click', function () { load($('#token').value.trim()); });
+  $('#token').addEventListener('keydown', function (e) { if (e.key === 'Enter') load($('#token').value.trim()); });
+  $('#search').addEventListener('input', table);
+  $('#reload').addEventListener('click', function () { load(token); });
+  $('#print').addEventListener('click', function () { window.print(); });
+
+  $('#toggleHidden').addEventListener('click', function () {
+    showHidden = !showHidden;
+    this.classList.toggle('on', showHidden);
+    this.textContent = showHidden ? 'Скрыть скрытых' : 'Показать скрытых';
+    table();
+  });
+
+  $('#tbody').addEventListener('click', function (e) {
+    var ed = e.target.getAttribute('data-edit');
+    var rs = e.target.getAttribute('data-restore');
+    if (ed) { openEditor(parseInt(ed, 10)); return; }
+    if (rs) {
+      var rowNum = parseInt(rs, 10);
+      var r = rows.filter(function (x) { return x.row === rowNum; })[0];
+      if (!r) return;
+      e.target.disabled = true;
+      setRemoved(rowNum, r.name, true, function (m) {
+        e.target.disabled = false;
+        $('#tableMsg').textContent = m;
+      });
+    }
+  });
+
+  $('#edComing').addEventListener('change', syncDishes);
+  $('#edSave').addEventListener('click', save);
+  $('#edCancel').addEventListener('click', closeEditor);
+
+  $('#edRemove').addEventListener('click', function () {
+    if (!editing) return;
+    if (!confirm('Убрать «' + editing.name + '» из списка?\n\nСтрока останется в таблице, её можно вернуть кнопкой «Показать скрытых».')) return;
+    busy(true);
+    $('#edMsg').textContent = '';
+    setRemoved(editing.row, editing.name, false, function (m) {
+      busy(false);
+      $('#edMsg').textContent = m;
+    }).then(function () { busy(false); closeEditor(); });
+  });
+
+  $('#overlay').addEventListener('click', function (e) { if (e.target === this) closeEditor(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('#overlay').classList.contains('hidden')) closeEditor();
+  });
+
   /* -------------------------------- CSV --------------------------------- */
   function csvCell(v) {
     var s = String(v == null ? '' : v);
     return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
 
-  function downloadCsv() {
-    var head = ['Имя и фамилия', 'Придёт', 'Горячее блюдо', 'Салат', 'Комментарий', 'Дата ответа', 'Актуальность'];
+  $('#csv').addEventListener('click', function () {
+    var head = ['Имя и фамилия', 'Придёт', 'Горячее блюдо', 'Салат', 'Комментарий', 'Дата ответа', 'Состояние'];
     var lines = [head.join(';')];
-    (showStale ? rows : actual()).forEach(function (r) {
-      lines.push([r.name, r.coming ? 'да' : 'нет', r.hot, r.salad, r.comment, r.at, r.stale ? 'перезаписан' : 'актуален']
+    (showHidden ? rows : actual()).forEach(function (r) {
+      var state = r.removed ? 'убран' : (r.stale ? 'перезаписан' : 'актуален');
+      lines.push([r.name, r.coming ? 'да' : 'нет', r.hot, r.salad, r.comment, r.at, state]
         .map(csvCell).join(';'));
     });
     var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
@@ -392,21 +612,6 @@ pre.list{
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  }
-
-  /* ------------------------------ СОБЫТИЯ ------------------------------- */
-  $('#loginBtn').addEventListener('click', function () { load($('#token').value.trim()); });
-  $('#token').addEventListener('keydown', function (e) { if (e.key === 'Enter') load($('#token').value.trim()); });
-  $('#search').addEventListener('input', table);
-  $('#reload').addEventListener('click', function () { load(token); });
-  $('#csv').addEventListener('click', downloadCsv);
-  $('#print').addEventListener('click', function () { window.print(); });
-
-  $('#toggleStale').addEventListener('click', function () {
-    showStale = !showStale;
-    this.classList.toggle('on', showStale);
-    this.textContent = showStale ? 'Скрыть перезаписанные' : 'Показать перезаписанные';
-    table();
   });
 
   $('#copyKitchen').addEventListener('click', function () {

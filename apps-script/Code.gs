@@ -45,8 +45,13 @@ var HEADERS = [
   'Горячее блюдо',
   'Салат',
   'Комментарий',
-  'ID анкеты'
+  'ID анкеты',
+  'Статус'
 ];
+
+/** Отметка в колонке «Статус» у убранных гостей.
+ *  Строка при этом НЕ стирается — её всегда можно вернуть.             */
+var MARK_REMOVED = 'убран';
 
 /* ----------------------------- ТОЧКИ ВХОДА ------------------------------ */
 
@@ -55,9 +60,11 @@ function doGet(e) {
   var out;
   try {
     var action = p.action || 'ping';
-    if (action === 'rsvp')      out = handleRsvp_(p.payload);
-    else if (action === 'list') out = handleList_(p.token);
-    else                        out = { ok: true, pong: true };
+    if      (action === 'rsvp')   out = handleRsvp_(p.payload);
+    else if (action === 'list')   out = handleList_(p.token);
+    else if (action === 'remove') out = handleRemove_(p);
+    else if (action === 'update') out = handleUpdate_(p);
+    else                          out = { ok: true, pong: true };
   } catch (err) {
     out = { ok: false, error: String((err && err.message) || err) };
   }
@@ -77,7 +84,7 @@ function doPost(e) {
   return reply_(out, p.callback);
 }
 
-/* ------------------------------ ОБРАБОТКА ------------------------------- */
+/* --------------------------- ПРИЁМ АНКЕТ -------------------------------- */
 
 function handleRsvp_(rawPayload) {
   if (!rawPayload) throw new Error('пустая анкета');
@@ -106,7 +113,8 @@ function handleRsvp_(rawPayload) {
       coming ? pick_(MAINS,  g.main)  : '',
       coming ? pick_(SALADS, g.salad) : '',
       i === 0 ? comment : '',
-      formId
+      formId,
+      ''
     ]);
   }
 
@@ -122,14 +130,14 @@ function handleRsvp_(rawPayload) {
   return { ok: true, saved: rows.length, formId: formId };
 }
 
+/* --------------------------- ЧТЕНИЕ СПИСКА ------------------------------ */
+
 function handleList_(token) {
-  if (!token || String(token) !== String(ADMIN_TOKEN)) {
-    return { ok: false, error: 'неверный пароль' };
-  }
+  if (!checkToken_(token)) return { ok: false, error: 'неверный пароль' };
 
   var sheet = getSheet_();
   var last  = sheet.getLastRow();
-  if (last < 2) return { ok: true, rows: [] };
+  if (last < 2) return { ok: true, rows: [], count: 0, menu: menu_() };
 
   var values = sheet.getRange(2, 1, last - 1, HEADERS.length).getValues();
   var rows   = [];
@@ -138,20 +146,97 @@ function handleList_(token) {
     var v = values[i];
     if (!v[1]) continue;
     rows.push({
+      row:     i + 2,                       // номер строки в самой таблице
       at:      v[0] instanceof Date ? v[0].toISOString() : String(v[0]),
       name:    String(v[1]),
       coming:  String(v[2]).toLowerCase().indexOf('да') === 0,
       hot:     String(v[3] || ''),
       salad:   String(v[4] || ''),
       comment: String(v[5] || ''),
-      formId:  String(v[6] || '')
+      formId:  String(v[6] || ''),
+      removed: String(v[7] || '').trim().toLowerCase() === MARK_REMOVED
     });
   }
 
-  return { ok: true, rows: rows, count: rows.length };
+  return { ok: true, rows: rows, count: rows.length, menu: menu_() };
+}
+
+/* ----------------------- УБРАТЬ / ВЕРНУТЬ ГОСТЯ ------------------------- */
+
+function handleRemove_(p) {
+  if (!checkToken_(p.token)) return { ok: false, error: 'неверный пароль' };
+
+  var restore = String(p.restore || '') === '1';
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sheet = getSheet_();
+    var row   = safeRow_(sheet, p.row, p.was);
+    sheet.getRange(row, 8).setValue(restore ? '' : MARK_REMOVED);
+  } finally {
+    lock.releaseLock();
+  }
+
+  return { ok: true, removed: !restore };
+}
+
+/* --------------------------- ПРАВКА ГОСТЯ ------------------------------- */
+
+function handleUpdate_(p) {
+  if (!checkToken_(p.token)) return { ok: false, error: 'неверный пароль' };
+
+  var name = clip_(p.name, 80).replace(/\s+/g, ' ').trim();
+  if (name.length < 2) return { ok: false, error: 'слишком короткое имя' };
+
+  var coming = String(p.coming || 'да').toLowerCase().indexOf('да') === 0;
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sheet = getSheet_();
+    var row   = safeRow_(sheet, p.row, p.was);
+
+    sheet.getRange(row, 2, 1, 5).setValues([[
+      name,
+      coming ? 'да' : 'нет',
+      coming ? pick_(MAINS,  p.main)  : '',
+      coming ? pick_(SALADS, p.salad) : '',
+      clip_(p.comment, 500)
+    ]]);
+  } finally {
+    lock.releaseLock();
+  }
+
+  return { ok: true };
 }
 
 /* --------------------------- ВСПОМОГАТЕЛЬНОЕ ---------------------------- */
+
+function checkToken_(token) {
+  return !!token && String(token) === String(ADMIN_TOKEN);
+}
+
+/** Проверяем, что правим именно ту строку, которую админ видел на экране.
+ *  Если таблицу успели поменять руками — лучше отказать, чем испортить
+ *  чужую запись.                                                        */
+function safeRow_(sheet, rawRow, expectedName) {
+  var row = parseInt(rawRow, 10);
+  if (!(row >= 2)) throw new Error('не указана строка');
+  if (row > sheet.getLastRow()) throw new Error('такой строки уже нет — обновите страницу');
+
+  var actual = String(sheet.getRange(row, 2).getValue()).trim();
+  if (expectedName && actual !== String(expectedName).trim()) {
+    throw new Error('таблица изменилась — обновите страницу и повторите');
+  }
+  return row;
+}
+
+/** Меню отдаём на страницу сводки, чтобы в редакторе были выпадающие
+ *  списки с точными названиями — без опечаток руками.                   */
+function menu_() {
+  return { mains: MAINS, salads: SALADS };
+}
 
 /** Принимаем только блюда из меню — чтобы в таблицу не попал мусор. */
 function pick_(list, value) {
@@ -175,6 +260,18 @@ function getSheet_() {
     sheet.setColumnWidth(5, 390);
     sheet.setColumnWidth(6, 260);
     sheet.setColumnWidth(7, 90);
+    sheet.setColumnWidth(8, 90);
+  } else {
+    // Дописываем недостающие колонки шапки — если лист остался
+    // от прежней версии скрипта, где колонки «Статус» ещё не было.
+    var width = sheet.getLastColumn();
+    if (width < HEADERS.length) {
+      sheet.getRange(1, width + 1, 1, HEADERS.length - width)
+           .setValues([HEADERS.slice(width)])
+           .setFontWeight('bold')
+           .setBackground('#f6e3e8');
+      sheet.setColumnWidth(HEADERS.length, 90);
+    }
   }
 
   return sheet;
@@ -205,7 +302,7 @@ function reply_(obj, callback) {
 function testAddRow() {
   var res = handleRsvp_(JSON.stringify({
     attending: true,
-    comment: 'Тестовая запись — эту строку можно удалить руками',
+    comment: 'Тестовая запись — эту строку можно убрать кнопкой в сводке',
     guests: [{ name: 'Тест Тестовый', main: MAINS[0], salad: SALADS[0] }]
   }));
   Logger.log(res);
