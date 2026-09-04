@@ -8,7 +8,7 @@ window.WEDDING_CONFIG = {
      Как её получить — README.md, шаг 2.
      Выглядит примерно так:
      https://script.google.com/macros/s/AKfycb.........../exec   */
-  API_URL: ''
+  API_URL: 'https://script.google.com/macros/s/AKfycbzDdk1-r_WhYv1a2g2Rg6QcqXQB97XteqczjkcFKeZ4wz84xY_TGk3ZgdAXc__A7UrYdA/exec'
 
 };
 
