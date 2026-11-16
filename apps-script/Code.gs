@@ -38,6 +38,15 @@ var SALADS = [
   'С рукколой, креветками и черри'
 ];
 
+/** Детское меню — массив KIDS в index.html. Ребёнок может выбрать и
+    блюдо из основного меню, поэтому для колонки «Горячее блюдо»
+    принимаем оба списка.                                               */
+var KIDS = [
+  'Куриная котлета с пюре',
+  'Паста с курицей',
+  'Паста с креветками'
+];
+
 var HEADERS = [
   'Дата ответа',
   'Имя и фамилия',
@@ -46,7 +55,8 @@ var HEADERS = [
   'Салат',
   'Комментарий',
   'ID анкеты',
-  'Статус'
+  'Статус',
+  'Ребёнок'
 ];
 
 /** Отметка в колонке «Статус» у убранных гостей.
@@ -110,11 +120,12 @@ function handleRsvp_(rawPayload) {
       stamp,
       name,
       coming ? 'да' : 'нет',
-      coming ? pick_(MAINS,  g.main)  : '',
-      coming ? pick_(SALADS, g.salad) : '',
+      coming ? pick_(allMains_(), g.main) : '',
+      coming ? pick_(SALADS,      g.salad) : '',
       i === 0 ? comment : '',
       formId,
-      ''
+      '',
+      g.kid ? 'да' : ''
     ]);
   }
 
@@ -154,7 +165,8 @@ function handleList_(token) {
       salad:   String(v[4] || ''),
       comment: String(v[5] || ''),
       formId:  String(v[6] || ''),
-      removed: String(v[7] || '').trim().toLowerCase() === MARK_REMOVED
+      removed: String(v[7] || '').trim().toLowerCase() === MARK_REMOVED,
+      kid:     String(v[8] || '').trim().toLowerCase().indexOf('да') === 0
     });
   }
 
@@ -190,6 +202,7 @@ function handleUpdate_(p) {
   if (name.length < 2) return { ok: false, error: 'слишком короткое имя' };
 
   var coming = String(p.coming || 'да').toLowerCase().indexOf('да') === 0;
+  var kid    = String(p.kid || '').toLowerCase().indexOf('да') === 0;
 
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -200,10 +213,11 @@ function handleUpdate_(p) {
     sheet.getRange(row, 2, 1, 5).setValues([[
       name,
       coming ? 'да' : 'нет',
-      coming ? pick_(MAINS,  p.main)  : '',
-      coming ? pick_(SALADS, p.salad) : '',
+      coming ? pick_(allMains_(), p.main)  : '',
+      coming ? pick_(SALADS,      p.salad) : '',
       clip_(p.comment, 500)
     ]]);
+    sheet.getRange(row, 9).setValue(kid ? 'да' : '');
   } finally {
     lock.releaseLock();
   }
@@ -235,7 +249,12 @@ function safeRow_(sheet, rawRow, expectedName) {
 /** Меню отдаём на страницу сводки, чтобы в редакторе были выпадающие
  *  списки с точными названиями — без опечаток руками.                   */
 function menu_() {
-  return { mains: MAINS, salads: SALADS };
+  return { mains: MAINS, salads: SALADS, kids: KIDS };
+}
+
+/** Всё, что гость может выбрать в колонку «Горячее блюдо». */
+function allMains_() {
+  return MAINS.concat(KIDS);
 }
 
 /** Принимаем только блюда из меню — чтобы в таблицу не попал мусор. */
@@ -261,6 +280,7 @@ function getSheet_() {
     sheet.setColumnWidth(6, 260);
     sheet.setColumnWidth(7, 90);
     sheet.setColumnWidth(8, 90);
+    sheet.setColumnWidth(9, 80);
   } else {
     // Дописываем недостающие колонки шапки — если лист остался
     // от прежней версии скрипта, где колонки «Статус» ещё не было.

@@ -178,6 +178,7 @@ pre.list{
               <th style="width:34px">№</th>
               <th>Имя и фамилия</th>
               <th>Статус</th>
+              <th>Ребёнок</th>
               <th>Горячее</th>
               <th>Салат</th>
               <th>Комментарий</th>
@@ -223,6 +224,14 @@ pre.list{
       <select id="edComing">
         <option value="да">да</option>
         <option value="нет">нет</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="edKid">Ребёнок</label>
+      <select id="edKid">
+        <option value="">нет</option>
+        <option value="да">да</option>
       </select>
     </div>
 
@@ -351,6 +360,7 @@ pre.list{
       tile(live.length, 'Ответили человек') +
       tile(coming.length, 'Придут') +
       tile(no.length, 'Не смогут') +
+      tile(coming.filter(function (r) { return r.kid; }).length, 'Из них детей') +
       tile(Object.keys(forms).length, 'Анкет заполнено');
 
     $('#hotBars').innerHTML   = bars(coming, 'hot')   || '<p class="dim">Пока нет данных</p>';
@@ -401,7 +411,7 @@ pre.list{
   function table() {
     var list = visibleRows();
     if (!list.length) {
-      $('#tbody').innerHTML = '<tr><td colspan="8" class="empty">Пока ни одного ответа</td></tr>';
+      $('#tbody').innerHTML = '<tr><td colspan="9" class="empty">Пока ни одного ответа</td></tr>';
       return;
     }
     $('#tbody').innerHTML = list.map(function (r, i) {
@@ -423,6 +433,7 @@ pre.list{
         '<td class="dim">' + (i + 1) + '</td>' +
         '<td class="name">' + esc(r.name) + mark + '</td>' +
         '<td><span class="tag ' + (r.coming ? 'yes' : 'no') + '">' + (r.coming ? 'придёт' : 'не сможет') + '</span></td>' +
+        '<td class="dim">' + (r.kid ? 'ребёнок' : '') + '</td>' +
         '<td>' + esc(r.hot) + '</td>' +
         '<td>' + esc(r.salad) + '</td>' +
         '<td class="dim">' + esc(r.comment) + '</td>' +
@@ -443,7 +454,10 @@ pre.list{
     });
 
     var out = 'Свадьба Сергея и Ксении, 12 декабря 2026\n';
-    out += 'Гостей подтвердило: ' + coming.length + '\n\n';
+    out += 'Гостей подтвердило: ' + coming.length;
+    var kids = coming.filter(function (r) { return r.kid; });
+    if (kids.length) out += ' (из них детей: ' + kids.length + ')';
+    out += '\n\n';
     out += 'ГОРЯЧЕЕ\n';
     Object.keys(byHot).forEach(function (k) { out += '  ' + k + ' — ' + byHot[k].length + '\n'; });
     out += '\nСАЛАТЫ\n';
@@ -457,7 +471,8 @@ pre.list{
 
     out += '\nПОИМЁННО\n';
     coming.forEach(function (r, i) {
-      out += '  ' + (i + 1) + '. ' + r.name + ' — ' + (r.hot || '?') + ' / ' + (r.salad || '?') + '\n';
+      out += '  ' + (i + 1) + '. ' + r.name + (r.kid ? ' (ребёнок)' : '') +
+             ' — ' + (r.hot || 'без горячего') + ' / ' + (r.salad || 'без салата') + '\n';
     });
 
     $('#kitchen').textContent = out;
@@ -480,7 +495,8 @@ pre.list{
     $('#edSub').textContent = 'Строка ' + r.row + ' в таблице';
     $('#edName').value = r.name;
     $('#edComing').value = r.coming ? 'да' : 'нет';
-    $('#edMain').innerHTML = options(menu.mains || [], r.hot);
+    $('#edKid').value = r.kid ? 'да' : '';
+    $('#edMain').innerHTML = options((menu.mains || []).concat(menu.kids || []), r.hot);
     $('#edSalad').innerHTML = options(menu.salads || [], r.salad);
     $('#edComment').value = r.comment;
     $('#edMsg').textContent = '';
@@ -515,6 +531,7 @@ pre.list{
       row: editing.row, was: editing.name,
       name: name,
       coming: $('#edComing').value,
+      kid: $('#edKid').value,
       main: $('#edMain').value,
       salad: $('#edSalad').value,
       comment: $('#edComment').value.trim()
@@ -598,11 +615,11 @@ pre.list{
   }
 
   $('#csv').addEventListener('click', function () {
-    var head = ['Имя и фамилия', 'Придёт', 'Горячее блюдо', 'Салат', 'Комментарий', 'Дата ответа', 'Состояние'];
+    var head = ['Имя и фамилия', 'Придёт', 'Ребёнок', 'Горячее блюдо', 'Салат', 'Комментарий', 'Дата ответа', 'Состояние'];
     var lines = [head.join(';')];
     (showHidden ? rows : actual()).forEach(function (r) {
       var state = r.removed ? 'убран' : (r.stale ? 'перезаписан' : 'актуален');
-      lines.push([r.name, r.coming ? 'да' : 'нет', r.hot, r.salad, r.comment, r.at, state]
+      lines.push([r.name, r.coming ? 'да' : 'нет', r.kid ? 'да' : '', r.hot, r.salad, r.comment, r.at, state]
         .map(csvCell).join(';'));
     });
     var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });

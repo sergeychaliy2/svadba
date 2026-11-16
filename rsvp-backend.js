@@ -52,9 +52,9 @@ window.WeddingRSVP = (function () {
   return {
 
     /* Вызывается из формы в index.html после того, как она сама
-       проверила, что все поля заполнены.
+       проверила имена гостей (блюда выбирать не обязательно).
          component — компонент анкеты (нужен, чтобы менять его состояние)
-         guests    — [{ name, main, salad }, ...]
+         guests    — [{ name, main, salad, kid }, ...]
          opts      — { attending: true|false, comment: '…' }             */
     submit: function (component, guests, opts) {
 
@@ -75,8 +75,9 @@ window.WeddingRSVP = (function () {
         guests: guests.map(function (g) {
           return {
             name:  String(g.name || '').trim().replace(/\s+/g, ' '),
-            main:  attending ? g.main  : '',
-            salad: attending ? g.salad : ''
+            main:  attending ? (g.main  || '') : '',
+            salad: attending ? (g.salad || '') : '',
+            kid:   !!g.kid
           };
         })
       };
