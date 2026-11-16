@@ -231,7 +231,7 @@
               <sc-if value="{{ g.coming }}" hint-placeholder-val="{{ true }}">
               <sc-if value="{{ g.kid }}" hint-placeholder-val="{{ false }}">
               <div style="display: flex; flex-direction: column; gap: 14px;">
-                <label style="font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #6E2A3C;">Детское меню · по желанию</label>
+                <label style="font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #6E2A3C;">Детское меню</label>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                   <sc-for list="{{ g.kidMains }}" as="o" hint-placeholder-count="3">
                     <button onClick="{{ o.pick }}" style="display: flex; align-items: center; gap: 16px; text-align: left; width: 100%; min-height: 56px; padding: 18px 20px; border-radius: 4px; cursor: pointer; font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 300; color: #3A2530; line-height: 1.5; border-width: 1px; border-style: solid; border-color: {{ o.border }}; background: {{ o.bg }}; transition: border-color .25s ease, background .25s ease, transform .25s ease;" style-hover="border-color: #6E2A3C; transform: translateX(4px);">
@@ -382,7 +382,7 @@ class Component extends DCLogic {
   opts(list, g, key) {
     return list.map(label => {
       const sel = g[key] === label;
-      return { label, pick: () => this.patchGuest(g.id, { [key]: label }), border: sel ? '#6E2A3C' : '#DCC8D1', bg: sel ? '#F6E3E8' : '#FFFBFA', dot: sel ? 1 : 0 };
+      return { label, pick: () => this.patchGuest(g.id, { [key]: sel ? null : label }), border: sel ? '#6E2A3C' : '#DCC8D1', bg: sel ? '#F6E3E8' : '#FFFBFA', dot: sel ? 1 : 0 };
     });
   }
   attendVals() {
@@ -415,8 +415,8 @@ class Component extends DCLogic {
       kidBg: g.kid ? '#F6E3E8' : '#FFFBFA',
       kidDot: g.kid ? 1 : 0,
       kidMains: this.opts(this.KIDS, g, 'main'),
-      mainsLabel: g.kid ? 'Или из основного меню · по желанию' : 'Горячее блюдо · по желанию',
-      saladsLabel: 'Салат · по желанию',
+      mainsLabel: g.kid ? 'Или из основного меню' : 'Горячее блюдо',
+      saladsLabel: 'Салат',
       mains: this.opts(this.MAINS, g, 'main'),
       salads: this.opts(this.SALADS, g, 'salad')
     }));
